@@ -1,3 +1,11 @@
+Quick start 
+npm cache clean --force
+rm -rf node_modules package-lock.json
+npm install bcrypt@latest
+npm install
+npm run start 
+
+
 # Creating a RESTful API with Node.js
 This repository accompanies my YouTube video series on building a RESTful API with Node.js: [https://github.com/academind/node-restful-api-tutorial.git](https://github.com/academind/node-restful-api-tutorial.git)
 
