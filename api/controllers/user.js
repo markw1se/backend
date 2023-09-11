@@ -22,46 +22,31 @@ exports.user_signup = (req, res, next) => {
 };
 
 exports.user_login = (req, res, next) => {
-  User.find({ email: req.body.email })
-    .exec()
-    .then(user => {
-      if (user.length < 1) {
-        return res.status(401).json({
-          message: "Auth failed"
-        });
-      }
-      bcrypt.compare(req.body.password, user[0].password, (err, result) => {
-        if (err) {
-          return res.status(401).json({
-            message: "Auth failed"
-          });
-        }
-        if (result) {
-          const token = jwt.sign(
-            {
-              email: user[0].email,
-              userId: user[0]._id
-            },
-            process.env.JWT_KEY,
-            {
-              expiresIn: "1h"
-            }
-          );
-          return res.status(200).json({
-            message: "Auth successful",
-            token: token
-          });
-        }
-        res.status(401).json({
-          message: "Auth failed"
-        });
-      });
+  const firebaseAuth = firebase.firebaseAuth;
+  email = req.body.email
+  password = req.body.password
+  firebase.signInWithEmailAndPassword(firebaseAuth, email, password)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      console.log("Sign-in success for user:", user.email);
+      res.status(200).json({ message: "Sign-in successful", user });
     })
-    .catch(err => {
-      console.log(err);
-      res.status(500).json({
-        error: err
-      });
+    .catch((error) => {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      console.error("Sign-in failed with error code:", errorCode);
+      let statusCode = 500; // Default to internal server error
+
+      if (errorCode === 'auth/user-not-found' || errorCode === 'auth/wrong-password') {
+        // Unauthorized - Invalid email or password
+        statusCode = 401;
+      } else if (errorCode === 'auth/too-many-requests') {
+        // Too many failed attempts - You can customize this status code as needed
+        statusCode = 429; // Too Many Requests
+      }
+
+      // Send an error response with the appropriate status code
+      res.status(statusCode).json({ error: errorMessage });
     });
 };
 
